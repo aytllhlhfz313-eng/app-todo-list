@@ -35,7 +35,7 @@ class TodoHomeScreen extends StatefulWidget {
 }
 
 class _TodoHomeScreenState extends State<TodoHomeScreen> {
-  // Ganti IP jika pakai Emulator Android (10.0.2.2) atau Perangkat Fisik (IP Laptop)
+  // Ganti IP jika pakai Emulator Android (10.0.2.2) atau (IP Laptop)
   final String baseUrl = 'http://localhost:3000/api/tasks';
   List tasks = [];
   bool isLoading = true;
