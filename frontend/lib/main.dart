@@ -35,8 +35,7 @@ class TodoHomeScreen extends StatefulWidget {
 }
 
 class _TodoHomeScreenState extends State<TodoHomeScreen> {
-  // Ganti IP jika pakai Emulator Android (10.0.2.2) atau (IP Laptop)
-  final String baseUrl = 'http://localhost:3000/api/tasks';
+  final String baseUrl = 'http://localhost:8000/api/tasks';
   List tasks = [];
   bool isLoading = true;
 
@@ -58,9 +57,11 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal terhubung ke backend: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal terhubung ke backend: $e')),
+        );
+      }
     }
   }
 
@@ -69,7 +70,11 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'title': title, 'description': description}),
+        body: json.encode({
+          'title': title,
+          'description': description,
+          'status': 'pending', 
+        }),
       );
       if (response.statusCode == 201) {
         fetchTasks();
@@ -79,14 +84,24 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
     }
   }
 
-  Future<void> toggleTaskStatus(int id, bool currentStatus) async {
+  Future<void> toggleTaskStatus(Map item) async {
+    final int id = item['id'];
+    final bool isDone = item['status'] == 'completed';
+    final String newStatus = isDone ? 'pending' : 'completed';
+
     try {
-      await http.put(
+      final response = await http.put(
         Uri.parse('$baseUrl/$id'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'is_completed': currentStatus ? 0 : 1}),
+        body: json.encode({
+          'title': item['title'],
+          'description': item['description'] ?? '',
+          'status': newStatus,
+        }),
       );
-      fetchTasks();
+      if (response.statusCode == 200) {
+        fetchTasks();
+      }
     } catch (e) {
       debugPrint('Error: $e');
     }
@@ -94,8 +109,10 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
 
   Future<void> deleteTask(int id) async {
     try {
-      await http.delete(Uri.parse('$baseUrl/$id'));
-      fetchTasks();
+      final response = await http.delete(Uri.parse('$baseUrl/$id'));
+      if (response.statusCode == 200) {
+        fetchTasks();
+      }
     } catch (e) {
       debugPrint('Error: $e');
     }
@@ -120,7 +137,7 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start, // <--- Sudah diperbaiki di sini
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Tambah Tugas Baru',
@@ -187,7 +204,7 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
                     final item = tasks[index];
-                    final bool isDone = item['is_completed'] == 1;
+                    final bool isDone = item['status'] == 'completed';
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -208,10 +225,10 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                           shape: const CircleBorder(),
                           activeColor: const Color(0xFF6C5CE7),
                           value: isDone,
-                          onChanged: (_) => toggleTaskStatus(item['id'], isDone),
+                          onChanged: (_) => toggleTaskStatus(item),
                         ),
                         title: Text(
-                          item['title'],
+                          item['title'] ?? '',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             decoration: isDone ? TextDecoration.lineThrough : null,
