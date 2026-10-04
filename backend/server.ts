@@ -170,7 +170,7 @@ app.post("/api/tasks", async (req, res) => {
 
     if (!title || !title.trim()) {
       return res.status(400).json({
-        message: "Title wajib diisi",
+        message: "Judul tugas wajib diisi",
       });
     }
 
