@@ -50,9 +50,9 @@ app.post('/api/tasks', (req: Request, res: Response) => {
   res.status(201).json(newTask);
 });
 
-// PUT: Update task berdasarkan ID
+// PUT: Update task
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   const taskIndex = tasks.findIndex((t) => t.id === id);
 
   if (taskIndex === -1) {
@@ -75,7 +75,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
 
 // DELETE: Hapus task
 app.delete('/api/tasks/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   tasks = tasks.filter((t) => t.id !== id);
   res.json({ message: 'Task deleted successfully' });
 });
