@@ -28,7 +28,7 @@ class TadaApp extends StatelessWidget {
 }
 
 // ==========================================
-// 1. AUTH SCREEN (SIGN IN / SIGN UP)
+// 1. AUTH SCREEN
 // ==========================================
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -167,7 +167,7 @@ class _AuthScreenState extends State<AuthScreen> {
 }
 
 // ==========================================
-// 2. PROFILE PAGE SCREEN
+// 2. PROFILE SCREEN
 // ==========================================
 class ProfileScreen extends StatelessWidget {
   final String userName;
@@ -213,11 +213,6 @@ class ProfileScreen extends StatelessWidget {
                 leading: const Icon(Icons.shield_outlined),
                 title: const Text('Account Role'),
                 trailing: const Text('Developer / Admin', style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.task_outlined),
-                title: const Text('Total Tasks Managed'),
-                trailing: const Text('Active Session', style: TextStyle(color: Colors.grey, fontSize: 12)),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -308,7 +303,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
-  // FITUR: EDIT TASK (HTTP PUT)
   Future<void> updateTask(int id, String title, String description, String status) async {
     try {
       final response = await http.put(
@@ -352,215 +346,447 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     return tasks;
   }
 
-  // MODAL EDIT TASK
-  void _showEditTaskModal(Map task) {
-    final titleController = TextEditingController(text: task['title']);
-    final descController = TextEditingController(text: task['description'] ?? '');
+  // ==========================================
+  // DESAIN BARU: MODAL CREATE PROJECT
+  // ==========================================
+  void _showCreateProjectModal() {
+    final projController = TextEditingController();
+    IconData selectedIcon = Icons.rocket_launch;
+    Color selectedColor = const Color(0xFF2DD4BF); // Teal default
+
+    final List<IconData> iconOptions = [
+      Icons.rocket_launch,
+      Icons.star_border,
+      Icons.favorite_border,
+      Icons.cloud_outlined,
+      Icons.menu_book,
+      Icons.flash_on_outlined,
+    ];
+
+    final List<Color> colorOptions = [
+      const Color(0xFFF87171), // Red
+      const Color(0xFFFBBF24), // Amber
+      const Color(0xFF2DD4BF), // Teal
+      const Color(0xFF60A5FA), // Blue
+      const Color(0xFFA78BFA), // Purple
+      const Color(0xFF4ADE80), // Green
+    ];
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 480,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Container(
+              width: 440,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Edit Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, size: 20)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Title', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('Description', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: descController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Create a project', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE05638),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  const Text('Group your tasks related to a specific place or topic.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 18),
+
+                  const Text('Project Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: projController,
+                    onChanged: (_) => setModalState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Website Refresh',
+                      hintStyle: const TextStyle(color: Colors.black26, fontSize: 13),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
-                    onPressed: () {
-                      if (titleController.text.isNotEmpty) {
-                        updateTask(
-                          task['id'],
-                          titleController.text,
-                          descController.text,
-                          task['status'] ?? 'pending',
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Text('Save Changes'),
                   ),
+                  const SizedBox(height: 16),
+
+                  const Text('Choose an icon', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: iconOptions.map((icon) {
+                      bool isSelected = selectedIcon == icon;
+                      return GestureDetector(
+                        onTap: () => setModalState(() => selectedIcon = icon),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? selectedColor.withOpacity(0.15) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isSelected ? selectedColor : const Color(0xFFE5E7EB), width: 1.5),
+                          ),
+                          child: Icon(icon, size: 20, color: isSelected ? selectedColor : Colors.grey),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text('Color Theme', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: colorOptions.map((color) {
+                      bool isSelected = selectedColor == color;
+                      return GestureDetector(
+                        onTap: () => setModalState(() => selectedColor = color),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: isSelected ? color : Colors.transparent, width: 2),
+                          ),
+                          child: CircleAvatar(radius: 12, backgroundColor: color),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // PREVIEW CARD
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: selectedColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: selectedColor.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: selectedColor, borderRadius: BorderRadius.circular(8)),
+                          child: Icon(selectedIcon, color: Colors.white, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              projController.text.isEmpty ? 'New Project' : projController.text,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            const Text('Has 0 open tasks', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          side: const BorderSide(color: Color(0xFFE5E7EB)),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel', style: TextStyle(color: Colors.black87)),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE05638),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                        onPressed: () {
+                          if (projController.text.isNotEmpty) {
+                            setState(() => projects.add(projController.text));
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: const Text('+ Create Project'),
+                      ),
+                    ],
+                  )
                 ],
-              )
-            ],
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
+  // ==========================================
+  // DESAIN BARU: MODAL ADD TASK
+  // ==========================================
   void _showAddTaskModal() {
     final titleController = TextEditingController();
     final descController = TextEditingController();
+    final subtaskController = TextEditingController();
+    
+    String selectedProject = projects.isNotEmpty ? projects.first : 'Northstar Launch';
+    String selectedPriority = 'Medium';
+    DateTime selectedDate = DateTime(2026, 10, 5);
+    String selectedAssignee = widget.userName;
+    bool enableReminder = true;
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 480,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Add a new task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, size: 20)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Title', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  hintText: 'What needs to be done?',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('Description', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: descController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Add context, notes, or a helpful list...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE05638),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Container(
+              width: 520,
+              padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Add a new task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                        ),
+                      ],
                     ),
-                    onPressed: () {
-                      if (titleController.text.isNotEmpty) {
-                        addTask(titleController.text, descController.text);
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Text('Save Task'),
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
+                    const Text('Create a task that helps keep your team progress move.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 18),
+
+                    const Text('Title', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        hintText: 'What needs to be done?',
+                        hintStyle: const TextStyle(color: Colors.black26, fontSize: 13),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    const Text('Description', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: descController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Add context, notes, or a helpful list...',
+                        hintStyle: const TextStyle(color: Colors.black26, fontSize: 13),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // DROPDOWN GRID (Project & Priority)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Project', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                value: selectedProject,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.folder_outlined, size: 18, color: Colors.grey),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                ),
+                                items: projects.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13)))).toList(),
+                                onChanged: (v) => setModalState(() => selectedProject = v!),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Priority', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                value: selectedPriority,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.flag_outlined, size: 18, color: Colors.grey),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                ),
+                                items: ['Low', 'Medium', 'High']
+                                    .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
+                                    .toList(),
+                                onChanged: (v) => setModalState(() => selectedPriority = v!),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // DROPDOWN GRID (Due Date & Assignee)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Due Date', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                              const SizedBox(height: 6),
+                              InkWell(
+                                onTap: () async {
+                                  DateTime? picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: selectedDate,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2030),
+                                  );
+                                  if (picked != null) setModalState(() => selectedDate = picked);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.shade400),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey),
+                                      const SizedBox(width: 8),
+                                      Text('${selectedDate.month}/${selectedDate.day}/${selectedDate.year}', style: const TextStyle(fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Assignee', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                value: selectedAssignee,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.person_outline, size: 18, color: Colors.grey),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                ),
+                                items: [widget.userName, 'Alex Lim', 'Sarah C.']
+                                    .map((a) => DropdownMenuItem(value: a, child: Text(a, style: const TextStyle(fontSize: 13))))
+                                    .toList(),
+                                onChanged: (v) => setModalState(() => selectedAssignee = v!),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    const Text('Subtasks', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: subtaskController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.add_task, size: 18, color: Colors.grey),
+                        hintText: 'Add a subtask',
+                        hintStyle: const TextStyle(color: Colors.black26, fontSize: 13),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // SWITCH REMINDER & FILE ATTACHMENT
+                    Row(
+                      children: [
+                        Switch(
+                          value: enableReminder,
+                          activeColor: const Color(0xFFE05638),
+                          onChanged: (v) => setModalState(() => enableReminder = v),
+                        ),
+                        const SizedBox(width: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('Reminder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            Text('15 minutes before', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                          ],
+                        ),
+                        const Spacer(),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                          onPressed: () {},
+                          icon: const Icon(Icons.attach_file, size: 16, color: Colors.black87),
+                          label: const Text('File Attachment', style: TextStyle(color: Colors.black87, fontSize: 12)),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel', style: TextStyle(color: Colors.black87)),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE05638),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          ),
+                          onPressed: () {
+                            if (titleController.text.isNotEmpty) {
+                              addTask(titleController.text, descController.text);
+                              Navigator.pop(context);
+                            }
+                          },
+                          icon: const Icon(Icons.check, size: 16),
+                          label: const Text('Save Task'),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  void _showCreateProjectModal() {
-    final projController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 420,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Create a project', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              TextField(
-                controller: projController,
-                decoration: InputDecoration(
-                  labelText: 'Project Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE05638),
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: () {
-                      if (projController.text.isNotEmpty) {
-                        setState(() => projects.add(projController.text));
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Text('Create Project'),
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // FITUR: DELETE PROJECT
   void _deleteProject(String projectName) {
     showDialog(
       context: context,
@@ -568,10 +794,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
         title: const Text('Delete Project'),
         content: Text('Are you sure you want to delete "$projectName"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
             onPressed: () {
@@ -794,18 +1017,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                                     subtitle: item['description'] != null && item['description'].toString().isNotEmpty
                                                         ? Text(item['description'], style: const TextStyle(fontSize: 12))
                                                         : null,
-                                                    trailing: Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        IconButton(
-                                                          icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blueGrey),
-                                                          onPressed: () => _showEditTaskModal(item),
-                                                        ),
-                                                        IconButton(
-                                                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
-                                                          onPressed: () => deleteTask(item['id']),
-                                                        ),
-                                                      ],
+                                                    trailing: IconButton(
+                                                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                                                      onPressed: () => deleteTask(item['id']),
                                                     ),
                                                   ),
                                                 );
@@ -824,7 +1038,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             ],
           ),
 
-          // NOTIFICATIONS OVERLAY
           if (showNotifications)
             Positioned(
               top: 65,
@@ -842,9 +1055,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                   children: const [
                     Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     SizedBox(height: 12),
-                    Text('• New feature unlocked: Edit Task & Delete Project', style: TextStyle(fontSize: 12, color: Colors.black87)),
-                    SizedBox(height: 6),
-                    Text('• Welcome to Tada App!', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('• New modals added successfully!', style: TextStyle(fontSize: 12, color: Colors.black87)),
                   ],
                 ),
               ),
@@ -914,7 +1125,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             IconButton(
               icon: const Icon(Icons.close, size: 14, color: Colors.grey),
               onPressed: () => _deleteProject(title),
-              hoverColor: Colors.red.shade100,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
