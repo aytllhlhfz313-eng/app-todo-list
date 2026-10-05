@@ -1,82 +1,86 @@
-import express from "express";
-import cors from "cors";
-import { pool } from "./db/index";
+import express, { Request, Response } from 'express';
+import cors from 'cors';
 
 const app = express();
-const PORT = 8000;
-
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.json({ message: "Backend Todo List berjalan!" });
+interface Task {
+  id: number;
+  title: string;
+  description: string;
+  status: string; // 'pending' | 'completed'
+  project: string;
+  priority: string; // 'Low' | 'Medium' | 'High'
+}
+
+let tasks: Task[] = [
+  {
+    id: 1,
+    title: 'spreadsheet bulanan',
+    description: 'di excel harus selesai hari ini',
+    status: 'pending',
+    project: 'Northstar Launch',
+    priority: 'Medium',
+  },
+];
+
+let nextId = 2;
+
+// GET: Ambil semua task
+app.get('/api/tasks', (req: Request, res: Response) => {
+  res.json(tasks);
 });
 
-app.get("/api/tasks", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM tasks");
-    res.json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Gagal mengambil data tugas" });
+// POST: Tambah task baru
+app.post('/api/tasks', (req: Request, res: Response) => {
+  const { title, description, status, project, priority } = req.body;
+
+  const newTask: Task = {
+    id: nextId++,
+    title: title || 'Untitled Task',
+    description: description || '',
+    status: status || 'pending',
+    // PASTIKAN project tidak memaksa 'Northstar Launch' jika ada request project dari client
+    project: project && project.trim() !== '' ? project : 'Inbox',
+    priority: priority || 'Medium',
+  };
+
+  tasks.push(newTask);
+  res.status(201).json(newTask);
+});
+
+// PUT: Update task berdasarkan ID
+app.put('/api/tasks/:id', (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const taskIndex = tasks.findIndex((t) => t.id === id);
+
+  if (taskIndex === -1) {
+    return res.status(404).json({ message: 'Task not found' });
   }
+
+  const { title, description, status, project, priority } = req.body;
+
+  tasks[taskIndex] = {
+    ...tasks[taskIndex],
+    title: title !== undefined ? title : tasks[taskIndex].title,
+    description: description !== undefined ? description : tasks[taskIndex].description,
+    status: status !== undefined ? status : tasks[taskIndex].status,
+    project: project !== undefined && project.trim() !== '' ? project : tasks[taskIndex].project,
+    priority: priority !== undefined ? priority : tasks[taskIndex].priority,
+  };
+
+  res.json(tasks[taskIndex]);
 });
 
-app.post("/api/tasks", async (req, res) => {
-  try {
-    const { title, description, status } = req.body;
-
-    await pool.query(
-      "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
-      [title, description, status || "pending"]
-    );
-
-    res.status(201).json({
-      message: "Tugas berhasil ditambahkan",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Gagal menambahkan tugas" });
-  }
+// DELETE: Hapus task
+app.delete('/api/tasks/:id', (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  tasks = tasks.filter((t) => t.id !== id);
+  res.json({ message: 'Task deleted successfully' });
 });
 
-app.put("/api/tasks/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, status } = req.body;
-
-    await pool.query(
-      "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?",
-      [title, description, status, id]
-    );
-
-    res.json({
-      message: "Tugas berhasil diperbarui",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Gagal memperbarui tugas" });
-  }
-});
-
-app.delete("/api/tasks/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await pool.query(
-      "DELETE FROM tasks WHERE id = ?",
-      [id]
-    );
-
-    res.json({
-      message: "Tugas berhasil dihapus",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Gagal menghapus tugas" });
-  }
-});
-
+const PORT = 8000;
 app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
