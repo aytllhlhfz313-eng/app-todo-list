@@ -5,7 +5,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-=======
 interface Task {
   id: number;
   title: string;
@@ -42,7 +41,6 @@ app.post('/api/tasks', (req: Request, res: Response) => {
     title: title || 'Untitled Task',
     description: description || '',
     status: status || 'pending',
-    // PASTIKAN project tidak memaksa 'Northstar Launch' jika ada request project dari client
     project: project && project.trim() !== '' ? project : 'Inbox',
     priority: priority || 'Medium',
   };
@@ -51,14 +49,13 @@ app.post('/api/tasks', (req: Request, res: Response) => {
   res.status(201).json(newTask);
 });
 
-// PUT: Update task
+// PUT: Update task berdasarkan ID
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
   const id = parseInt(String(req.params.id));
   const taskIndex = tasks.findIndex((t) => t.id === id);
 
   if (taskIndex === -1) {
     return res.status(404).json({ message: 'Task not found' });
->>>>>>> 1b148b3 (update backend server.ts dan perbaikan bug project)
   }
 
   const { title, description, status, project, priority } = req.body;
@@ -75,13 +72,11 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
   res.json(tasks[taskIndex]);
 });
 
-
-// DELETE: Hapus task
+// DELETE: Hapus task berdasarkan ID
 app.delete('/api/tasks/:id', (req: Request, res: Response) => {
   const id = parseInt(String(req.params.id));
   tasks = tasks.filter((t) => t.id !== id);
   res.json({ message: 'Task deleted successfully' });
->>>>>>> 1b148b3 (update backend server.ts dan perbaikan bug project)
 });
 
 const PORT = 8000;
