@@ -13,7 +13,11 @@
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
+<<<<<<< HEAD
     "express": "^5.3.0",
+=======
+    "express": "^5.2.1",
+>>>>>>> e87f3585b0b7a74289dda37bc9d762c503d51a0c
     "mysql2": "^3.24.4"
   },
   "devDependencies": {
