@@ -9,9 +9,9 @@ interface Task {
   id: number;
   title: string;
   description: string;
-  status: string; // 'pending' | 'completed'
+  status: string; 
   project: string;
-  priority: string; // 'Low' | 'Medium' | 'High'
+  priority: string; 
 }
 
 let tasks: Task[] = [
