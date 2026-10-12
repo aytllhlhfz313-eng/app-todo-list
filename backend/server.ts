@@ -9,9 +9,9 @@ interface Task {
   id: number;
   title: string;
   description: string;
-  status: string; // 'pending' | 'completed'
+  status: string; 
   project: string;
-  priority: string; // 'Low' | 'Medium' | 'High'
+  priority: string; 
 }
 
 let tasks: Task[] = [
@@ -41,6 +41,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
     title: title || 'Untitled Task',
     description: description || '',
     status: status || 'pending',
+    // PASTIKAN project tidak memaksa 'Northstar Launch' jika ada request project dari client
     project: project && project.trim() !== '' ? project : 'Inbox',
     priority: priority || 'Medium',
   };
@@ -49,7 +50,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
   res.status(201).json(newTask);
 });
 
-// PUT: Update task berdasarkan ID
+// PUT: Update task
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
   const id = parseInt(String(req.params.id));
   const taskIndex = tasks.findIndex((t) => t.id === id);
@@ -72,7 +73,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
   res.json(tasks[taskIndex]);
 });
 
-// DELETE: Hapus task berdasarkan ID
+// DELETE: Hapus task
 app.delete('/api/tasks/:id', (req: Request, res: Response) => {
   const id = parseInt(String(req.params.id));
   tasks = tasks.filter((t) => t.id !== id);

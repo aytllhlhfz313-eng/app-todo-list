@@ -287,7 +287,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
-  Future<void> addTask(String title, String description, {String? project, String? priority}) async {
+  Future<void> addTask(String title, String description, {required String project, String? priority}) async {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
@@ -296,7 +296,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
           'title': title,
           'description': description,
           'status': 'pending',
-          'project': project ?? (projects.isNotEmpty ? projects.first : 'Northstar Launch'),
+          'project': project, // Mengirimkan nama project yang dipilih secara eksplisit
           'priority': priority ?? 'Medium',
         }),
       );
@@ -349,20 +349,18 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
-  // LOGIKA FILTER TASK BERDASARKAN FILTER/PROJECT AKTIF
+  // FILTER TASK SESUAI PROYEK ATAU TAB UTAMA
   List get filteredTasks {
     if (currentFilter == 'Completed') {
       return tasks.where((t) => t['status'] == 'completed').toList();
     } else if (currentFilter == 'Today' || currentFilter == 'Inbox') {
       return tasks.where((t) => t['status'] != 'completed').toList();
     } else if (projects.contains(currentFilter)) {
-      // Filter berdasarkan Nama Project
-      return tasks.where((t) => (t['project'] ?? 'Northstar Launch') == currentFilter).toList();
+      return tasks.where((t) => t['project'] == currentFilter).toList();
     }
     return tasks;
   }
 
-  // MODAL EDIT TASK
   void _showEditTaskModal(Map task) {
     final titleController = TextEditingController(text: task['title']);
     final descController = TextEditingController(text: task['description'] ?? '');
@@ -430,7 +428,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                 ),
                                 items: projects.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13)))).toList(),
-                                onChanged: (v) => setModalState(() => selectedProject = v!),
+                                onChanged: (v) {
+                                  if (v != null) setModalState(() => selectedProject = v);
+                                },
                               ),
                             ],
                           ),
@@ -451,7 +451,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                 items: ['Low', 'Medium', 'High']
                                     .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
                                     .toList(),
-                                onChanged: (v) => setModalState(() => selectedPriority = v!),
+                                onChanged: (v) {
+                                  if (v != null) setModalState(() => selectedPriority = v);
+                                },
                               ),
                             ],
                           ),
@@ -650,8 +652,14 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                         onPressed: () {
-                          if (projController.text.isNotEmpty) {
-                            setState(() => projects.add(projController.text));
+                          if (projController.text.trim().isNotEmpty) {
+                            final newProjName = projController.text.trim();
+                            setState(() {
+                              if (!projects.contains(newProjName)) {
+                                projects.add(newProjName);
+                              }
+                              currentFilter = newProjName; // Otomatis berpindah ke project baru
+                            });
                             Navigator.pop(context);
                           }
                         },
@@ -672,7 +680,10 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     final titleController = TextEditingController();
     final descController = TextEditingController();
 
-    String selectedProject = projects.isNotEmpty ? projects.first : 'Northstar Launch';
+    // MENENTUKAN PROJECT DEFAULT DENGAN BENAR
+    String selectedProject = projects.contains(currentFilter)
+        ? currentFilter
+        : (projects.isNotEmpty ? projects.first : 'Northstar Launch');
     String selectedPriority = 'Medium';
     DateTime selectedDate = DateTime(2026, 10, 5);
     String selectedAssignee = widget.userName;
@@ -737,14 +748,20 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                               const Text('Project', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                value: selectedProject,
+                                value: projects.contains(selectedProject) ? selectedProject : projects.first,
                                 decoration: InputDecoration(
                                   prefixIcon: const Icon(Icons.folder_outlined, size: 18, color: Colors.grey),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                 ),
                                 items: projects.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13)))).toList(),
-                                onChanged: (v) => setModalState(() => selectedProject = v!),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setModalState(() {
+                                      selectedProject = v;
+                                    });
+                                  }
+                                },
                               ),
                             ],
                           ),
@@ -766,7 +783,13 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                 items: ['Low', 'Medium', 'High']
                                     .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
                                     .toList(),
-                                onChanged: (v) => setModalState(() => selectedPriority = v!),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setModalState(() {
+                                      selectedPriority = v;
+                                    });
+                                  }
+                                },
                               ),
                             ],
                           ),
@@ -827,7 +850,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                 items: [widget.userName, 'Alex Lim', 'Sarah C.']
                                     .map((a) => DropdownMenuItem(value: a, child: Text(a, style: const TextStyle(fontSize: 13))))
                                     .toList(),
-                                onChanged: (v) => setModalState(() => selectedAssignee = v!),
+                                onChanged: (v) {
+                                  if (v != null) setModalState(() => selectedAssignee = v);
+                                },
                               ),
                             ],
                           ),
@@ -855,11 +880,11 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           ),
                           onPressed: () {
-                            if (titleController.text.isNotEmpty) {
+                            if (titleController.text.trim().isNotEmpty) {
                               addTask(
-                                titleController.text,
-                                descController.text,
-                                project: selectedProject,
+                                titleController.text.trim(),
+                                descController.text.trim(),
+                                project: selectedProject, // Mengirimkan variabel terpilih dari modal
                                 priority: selectedPriority,
                               );
                               Navigator.pop(context);
@@ -888,9 +913,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     return Scaffold(
       body: Row(
         children: [
-          // -----------------------------------------------------------
           // SIDEBAR (Kiri)
-          // -----------------------------------------------------------
           Container(
             width: 260,
             color: Colors.white,
@@ -1026,9 +1049,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
 
           const VerticalDivider(width: 1, color: Color(0xFFE5E7EB)),
 
-          // -----------------------------------------------------------
           // DASHBOARD MAIN CONTENT (Kanan)
-          // -----------------------------------------------------------
           Expanded(
             child: Container(
               color: const Color(0xFFF9FAFB),
@@ -1036,7 +1057,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // BANNER HERO & STAT CARDS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1076,7 +1096,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 4 Stat Metric Cards
                   Row(
                     children: [
                       _buildHeaderStatCard(
@@ -1122,7 +1141,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Goal Yellow Banner
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1153,7 +1171,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // TASK LIST TABLE SECTION
+                  // DAFTAR TASK
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(20),
@@ -1251,7 +1269,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                                         children: [
                                                           _buildBadge(
                                                             icon: Icons.folder_outlined,
-                                                            label: item['project'] ?? 'Northstar Launch',
+                                                            label: item['project'] ?? 'Inbox',
                                                             bgColor: const Color(0xFFF3F4F6),
                                                             textColor: const Color(0xFF4B5563),
                                                           ),
@@ -1274,12 +1292,10 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                                     ],
                                                   ),
                                                 ),
-                                                // TOMBOL EDIT TASK
                                                 IconButton(
                                                   icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.grey),
                                                   onPressed: () => _showEditTaskModal(item),
                                                 ),
-                                                // TOMBOL DELETE TASK
                                                 IconButton(
                                                   icon: const Icon(Icons.delete_outline, size: 18, color: Colors.grey),
                                                   onPressed: () => deleteTask(item['id']),
